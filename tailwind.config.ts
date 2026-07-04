@@ -63,25 +63,42 @@ const config: Config = {
       },
       keyframes: {
         'accordion-down': {
-          from: {
-            height: '0',
-          },
-          to: {
-            height: 'var(--radix-accordion-content-height)',
-          },
+          from: { height: '0' },
+          to: { height: 'var(--radix-accordion-content-height)' },
         },
         'accordion-up': {
-          from: {
-            height: 'var(--radix-accordion-content-height)',
-          },
-          to: {
-            height: '0',
-          },
+          from: { height: 'var(--radix-accordion-content-height)' },
+          to: { height: '0' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: 'calc(200% + 1000px) 0' },
+        },
+        'spin-slow': {
+          from: { transform: 'rotate(0deg)' },
+          to: { transform: 'rotate(360deg)' },
         },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'spin-slow': 'spin-slow 8s linear infinite',
+        shimmer: 'shimmer 2s infinite',
+      },
+      backdropBlur: {
+        xs: '2px',
+      },
+      boxShadow: {
+        'glow-blue': '0 0 20px rgba(59, 130, 246, 0.3)',
+        'glow-emerald': '0 0 20px rgba(16, 185, 129, 0.3)',
+        'glow-slate': '0 0 20px rgba(100, 116, 139, 0.3)',
+        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+        'soft': '0 4px 16px rgba(0, 0, 0, 0.08)',
+        'medium': '0 8px 24px rgba(0, 0, 0, 0.12)',
+        'hard': '0 16px 48px rgba(0, 0, 0, 0.16)',
+      },
+      transitionDuration: {
+        '250': '250ms',
       },
     },
   },

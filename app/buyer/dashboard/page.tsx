@@ -21,11 +21,17 @@ import {
   Package,
   ArrowRight,
   Sparkles,
+  Heart,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { supabase, App, License } from '@/lib/supabase';
+import { supabase, License } from '@/lib/supabase';
 import { Badge } from '@/components/ui/badge';
+import { useWishlist } from '@/hooks/useWishlist';
+import { DownloadHistoryPanel } from '@/components/download-history-panel';
+import { SubscriptionManager } from '@/components/subscription-manager';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 
 const sidebarItems = [
   { icon: <ShoppingBag className="h-5 w-5" />, label: 'Dashboard', href: '/buyer/dashboard' },
@@ -38,6 +44,9 @@ export default function BuyerDashboard() {
   const { user } = useAuth();
   const [licenses, setLicenses] = useState<License[]>([]);
   const [loading, setLoading] = useState(true);
+  const { wishlist, isInWishlist, addToWishlist, removeFromWishlist } = useWishlist(
+    user?.id || ''
+  );
 
   useEffect(() => {
     if (user) {
@@ -59,12 +68,23 @@ export default function BuyerDashboard() {
 
   const totalSpent = licenses.reduce((sum, l) => sum + Number(l.price_paid), 0);
   const activeLicenses = licenses.filter((l) => !l.expires_at || new Date(l.expires_at) > new Date()).length;
+  const monthlySubscriptions = licenses.filter((l) => l.app?.price_type === 'subscription').length;
 
   const stats = [
     { label: 'Posiadane app', value: licenses.length.toString(), icon: <Package className="h-5 w-5" />, gradient: 'from-emerald-500 to-teal-500' },
     { label: 'Wydano', value: `$${totalSpent.toFixed(0)}`, icon: <CreditCard className="h-5 w-5" />, gradient: 'from-blue-500 to-indigo-500' },
     { label: 'Aktywnych', value: activeLicenses.toString(), icon: <TrendingUp className="h-5 w-5" />, gradient: 'from-violet-500 to-purple-500' },
-    { label: 'Chat', value: '0', icon: <MessageSquare className="h-5 w-5" />, gradient: 'from-amber-500 to-orange-500' },
+    { label: 'Subskrypcji', value: monthlySubscriptions.toString(), icon: <MessageSquare className="h-5 w-5" />, gradient: 'from-amber-500 to-orange-500' },
+  ];
+
+  const mockDownloadHistory = [
+    { id: '1', appTitle: 'App Pro', date: '2024-01-15', version: '2.1.0', status: 'completed' as const, size: '125MB' },
+    { id: '2', appTitle: 'Builder Suite', date: '2024-01-14', version: '1.5.0', status: 'completed' as const, size: '89MB' },
+  ];
+
+  const mockSubscriptions = [
+    { id: '1', appTitle: 'Premium Tools', price: 4.99, renewalDate: '2024-02-15', status: 'active' as const },
+    { id: '2', appTitle: 'Cloud Sync', price: 9.99, renewalDate: '2024-02-10', status: 'expiring_soon' as const },
   ];
 
   return (
@@ -123,10 +143,15 @@ export default function BuyerDashboard() {
         ))}
       </div>
 
-      {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* My Apps */}
-        <div className="lg:col-span-2 animate-fade-up" style={{ animationDelay: '500ms', opacity: 0 }}>
+      {/* Tabs Section */}
+      <Tabs defaultValue="apps" className="mb-8 animate-fade-up" style={{ animationDelay: '500ms', opacity: 0 }}>
+        <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsTrigger value="apps">Twoje aplikacje</TabsTrigger>
+          <TabsTrigger value="downloads">Historia pobierań</TabsTrigger>
+          <TabsTrigger value="subscriptions">Subskrypcje</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="apps" className="space-y-4">
           <Card className="card-elevated">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div>
@@ -147,7 +172,7 @@ export default function BuyerDashboard() {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <div className="text-center py-8 text-muted-foreground">Ladowanie...</div>
+                <div className="text-center py-8 text-muted-foreground">Ładowanie...</div>
               ) : licenses.length === 0 ? (
                 <div className="text-center py-8 bg-slate-50/50 dark:bg-slate-800/50 rounded-2xl">
                   <div className="inline-flex items-center justify-center p-4 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50 mb-4">
@@ -157,7 +182,7 @@ export default function BuyerDashboard() {
                   <Link href="/buyer/marketplace">
                     <Button className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700">
                       <Store className="h-4 w-4 mr-2" />
-                      Przegladaj marketplace
+                      Przeglądaj marketplace
                     </Button>
                   </Link>
                 </div>
@@ -180,65 +205,96 @@ export default function BuyerDashboard() {
                           </p>
                         </div>
                       </div>
-                      <Button variant="outline" size="sm" className="rounded-xl">
-                        <Download className="h-4 w-4 mr-1" />
-                        Pobierz
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            isInWishlist(license.app_id)
+                              ? removeFromWishlist(license.app_id)
+                              : addToWishlist(license.app_id)
+                          }
+                        >
+                          <Heart
+                            className={`h-4 w-4 ${isInWishlist(license.app_id) ? 'fill-red-500 text-red-500' : ''}`}
+                          />
+                        </Button>
+                        <Button variant="outline" size="sm" className="rounded-xl">
+                          <Download className="h-4 w-4 mr-1" />
+                          Pobierz
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
             </CardContent>
           </Card>
-        </div>
+        </TabsContent>
 
-        {/* Sidebar */}
-        <div className="space-y-6 animate-fade-up" style={{ animationDelay: '600ms', opacity: 0 }}>
-          {/* Quick Actions */}
-          <Card className="card-elevated bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/50 dark:to-teal-950/50 border-emerald-100 dark:border-emerald-900/50">
-            <CardHeader>
-              <CardTitle className="text-lg">Szybkie akcje</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-2">
+        <TabsContent value="downloads">
+          <DownloadHistoryPanel history={mockDownloadHistory} />
+        </TabsContent>
+
+        <TabsContent value="subscriptions">
+          <SubscriptionManager subscriptions={mockSubscriptions} />
+        </TabsContent>
+      </Tabs>
+
+      {/* Sidebar */}
+      <div className="space-y-6 animate-fade-up" style={{ animationDelay: '600ms', opacity: 0 }}>
+        {/* Quick Actions */}
+        <Card className="card-elevated bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/50 dark:to-teal-950/50 border-emerald-100 dark:border-emerald-900/50">
+          <CardHeader>
+            <CardTitle className="text-lg">Szybkie akcje</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-2">
+            <Link href="/buyer/marketplace">
+              <Button variant="outline" className="w-full h-16 flex flex-col gap-1 rounded-xl bg-white/50 dark:bg-slate-900/50">
+                <Store className="h-5 w-5" />
+                <span className="text-xs">Marketplace</span>
+              </Button>
+            </Link>
+            <Link href="/buyer/chats">
+              <Button variant="outline" className="w-full h-16 flex flex-col gap-1 rounded-xl bg-white/50 dark:bg-slate-900/50">
+                <MessageSquare className="h-5 w-5" />
+                <span className="text-xs">Chat</span>
+              </Button>
+            </Link>
+            <Link href="/buyer/my-apps">
+              <Button variant="outline" className="w-full h-16 flex flex-col gap-1 rounded-xl bg-white/50 dark:bg-slate-900/50">
+                <Package className="h-5 w-5" />
+                <span className="text-xs">Moje app</span>
+              </Button>
+            </Link>
+            <Button variant="outline" className="w-full h-16 flex flex-col gap-1 rounded-xl bg-white/50 dark:bg-slate-900/50">
+              <Download className="h-5 w-5" />
+              <span className="text-xs">Pobierz</span>
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Promo Card */}
+        {licenses.length === 0 && (
+          <Card className="card-elevated bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/50 dark:to-purple-950/50 border-violet-100 dark:border-violet-900/50">
+            <CardContent className="pt-6 text-center">
+              <div className="inline-flex items-center justify-center p-4 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-500 text-white mb-4 shadow-lg shadow-violet-500/25">
+                <Store className="h-8 w-8" />
+              </div>
+              <h3 className="font-semibold mb-1">Znajdź idealną appkę</h3>
+              <p className="text-xs text-muted-foreground mb-4">
+                Przeglądaj setki gotowych rozwiązań
+              </p>
               <Link href="/buyer/marketplace">
-                <Button variant="outline" className="w-full h-16 flex flex-col gap-1 rounded-xl bg-white/50 dark:bg-slate-900/50">
-                  <Store className="h-5 w-5" />
-                  <span className="text-xs">Marketplace</span>
-                </Button>
-              </Link>
-              <Link href="/buyer/chats">
-                <Button variant="outline" className="w-full h-16 flex flex-col gap-1 rounded-xl bg-white/50 dark:bg-slate-900/50">
-                  <MessageSquare className="h-5 w-5" />
-                  <span className="text-xs">Chat</span>
+                <Button size="sm" className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700">
+                  Rozpocznij
+                  <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
               </Link>
             </CardContent>
           </Card>
-
-          {/* Promo Card */}
-          {licenses.length === 0 && (
-            <Card className="card-elevated bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/50 dark:to-purple-950/50 border-violet-100 dark:border-violet-900/50">
-              <CardContent className="pt-6 text-center">
-                <div className="inline-flex items-center justify-center p-4 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-500 text-white mb-4 shadow-lg shadow-violet-500/25">
-                  <Store className="h-8 w-8" />
-                </div>
-                <h3 className="font-semibold mb-1">Znajdz idealna appke</h3>
-                <p className="text-xs text-muted-foreground mb-4">
-                  Przegladaj setki gotowych rozwiazan
-                </p>
-                <Link href="/buyer/marketplace">
-                  <Button size="sm" className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700">
-                    Rozpocznij
-                    <ArrowRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        )}
       </div>
     </AppShell>
   );
 }
-
-import { cn } from '@/lib/utils';
