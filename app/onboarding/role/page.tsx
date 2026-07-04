@@ -120,7 +120,12 @@ export default function OnboardingRolePage() {
                     'relative flex flex-col items-center p-6 rounded-2xl border-2 transition-all duration-300 animate-fade-up',
                     selectedRole === role.key
                       ? cn('border-transparent bg-gradient-to-br shadow-lg scale-105', role.bgGradient)
-                      : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                      : cn(
+                          'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50',
+                          role.key === 'DEVELOPER' && 'hover-glow-dev',
+                          role.key === 'BUYER' && 'hover-glow-buyer',
+                          role.key === 'VIEWER' && 'hover-glow-viewer'
+                        )
                   )}
                   style={{ animationDelay: `${index * 100}ms`, opacity: 0 }}
                 >
