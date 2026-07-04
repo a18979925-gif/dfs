@@ -125,7 +125,7 @@ export default function ViewerHome() {
           {filteredApps.map((app, index) => (
             <Link key={app.id} href={`/viewer/app/${app.id}`}>
               <Card
-                className="card-elevated group cursor-pointer animate-fade-up"
+                className="card-elevated group cursor-pointer animate-fade-up hover-glow-viewer"
                 style={{ animationDelay: `${(index + 2) * 100}ms`, opacity: 0 }}
               >
                 <CardHeader className="pb-3">
