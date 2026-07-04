@@ -114,7 +114,7 @@ export default function DevDashboard() {
         {statsData.map((stat, index) => (
           <Card
             key={stat.label}
-            className="card-elevated overflow-hidden animate-fade-up"
+            className="card-elevated overflow-hidden animate-fade-up hover-glow-dev"
             style={{ animationDelay: `${(index + 1) * 100}ms`, opacity: 0 }}
           >
             <CardContent className="pt-6">

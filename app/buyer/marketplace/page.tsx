@@ -202,7 +202,7 @@ export default function MarketplacePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {featuredApps.map((app, index) => (
               <Link key={app.id} href={`/buyer/app/${app.id}`}>
-                <Card className="card-elevated group cursor-pointer overflow-hidden animate-fade-up" style={{ animationDelay: `${(index + 4) * 100}ms`, opacity: 0 }}>
+                <Card className="card-elevated group cursor-pointer overflow-hidden animate-fade-up hover-glow-buyer" style={{ animationDelay: `${(index + 4) * 100}ms`, opacity: 0 }}>
                   <div className="h-32 bg-gradient-to-br from-emerald-400/20 via-teal-400/20 to-cyan-400/20 relative">
                     <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
                     <div className="absolute top-3 right-3">
@@ -256,7 +256,7 @@ export default function MarketplacePage() {
           {filteredApps.map((app, index) => (
             <Link key={app.id} href={`/buyer/app/${app.id}`}>
               <Card
-                className="card-elevated group cursor-pointer animate-fade-up"
+                className="card-elevated group cursor-pointer animate-fade-up hover-glow-buyer"
                 style={{ animationDelay: `${(index + 5) * 50}ms`, opacity: 0 }}
               >
                 <CardHeader className="pb-3">
