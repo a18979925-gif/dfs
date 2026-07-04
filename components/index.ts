@@ -12,3 +12,6 @@ export { TeamCollaboration } from './team-collaboration';
 export { AppShell } from './layouts/app-shell';
 export { AuthProvider } from './auth-provider';
 export { AuthGuard } from './auth-guard';
+
+// Team Workspace Module
+export { TeamWorkspace, TeamProvider } from './team';

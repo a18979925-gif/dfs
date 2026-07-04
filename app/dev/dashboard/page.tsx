@@ -35,7 +35,7 @@ import { useEffect, useState } from 'react';
 import { supabase, Project, App } from '@/lib/supabase';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { AnalyticsChart } from '@/components/analytics-chart';
-import { TeamCollaboration } from '@/components/team-collaboration';
+import { TeamWorkspace, TeamProvider } from '@/components/team';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -49,12 +49,13 @@ const sidebarItems = [
   { icon: <MessageSquare className="h-5 w-5" />, label: 'Chats', href: '/dev/chats' },
 ];
 
-export default function DevDashboard() {
+function DevDashboardContent() {
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [apps, setApps] = useState<App[]>([]);
   const [loading, setLoading] = useState(true);
   const { data: analyticsData } = useAnalytics(user?.id || '');
+  const [activeDashboardTab, setActiveDashboardTab] = useState('overview');
 
   useEffect(() => {
     if (user) {
@@ -155,7 +156,14 @@ export default function DevDashboard() {
       brandTitle="Developer Studio"
       brandGradient="from-white to-blue-100"
     >
-      {/* Hero Section */}
+      <Tabs value={activeDashboardTab} onValueChange={setActiveDashboardTab} className="w-full">
+        <TabsList className="mb-8 bg-slate-150/40 dark:bg-slate-800/40 rounded-xl p-1 max-w-[340px] border border-slate-100 dark:border-slate-800">
+          <TabsTrigger value="overview" className="rounded-lg text-xs font-semibold">Pulpit i Statystyki</TabsTrigger>
+          <TabsTrigger value="team-workspace" className="rounded-lg text-xs font-semibold">Workspace Zespołu</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          {/* Hero Section */}
       <div className="mb-12 animate-fade-up" style={{ opacity: 0 }}>
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
@@ -404,9 +412,27 @@ export default function DevDashboard() {
 
         {/* Sidebar */}
         <div className="space-y-8">
-          {/* Team Panel */}
+          {/* Team Workspace Promo */}
           <div className="animate-fade-up" style={{ animationDelay: '400ms', opacity: 0 }}>
-            <TeamCollaboration teamMembers={[]} />
+            <Card className="card-elevated bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+              <CardContent className="pt-6">
+                <h3 className="font-semibold mb-1 text-sm">Centrum Zespołowe</h3>
+                <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+                  Współdziel ekran na żywo, zarządzaj zadaniami Kanban i rozmawiaj na czacie.
+                </p>
+                <Badge className="bg-blue-50 text-blue-700 dark:bg-blue-950/20 dark:text-blue-300">
+                  Aktywne Teams + Asana
+                </Badge>
+
+                <Button
+                  size="sm"
+                  onClick={() => setActiveDashboardTab('team-workspace')}
+                  className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold"
+                >
+                  Stwórz zespół
+                </Button>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Quick Actions */}
@@ -473,6 +499,20 @@ export default function DevDashboard() {
           )}
         </div>
       </div>
-    </AppShell>
+    </TabsContent>
+
+    <TabsContent value="team-workspace" className="animate-fade-up">
+      <TeamWorkspace />
+    </TabsContent>
+  </Tabs>
+</AppShell>
+  );
+}
+
+export default function DevDashboard() {
+  return (
+    <TeamProvider>
+      <DevDashboardContent />
+    </TeamProvider>
   );
 }
