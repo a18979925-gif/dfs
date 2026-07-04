@@ -266,6 +266,14 @@ DROP POLICY IF EXISTS "insert_analytics_events" ON analytics_events;
 CREATE POLICY "insert_analytics_events" ON analytics_events FOR INSERT
   TO authenticated WITH CHECK (user_id IS NULL OR auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "select_analytics_events" ON analytics_events;
+CREATE POLICY "select_analytics_events" ON analytics_events FOR SELECT
+  TO authenticated USING (
+    app_id IS NULL OR EXISTS (
+      SELECT 1 FROM apps WHERE apps.id = analytics_events.app_id AND apps.dev_id = auth.uid()
+    )
+  );
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_apps_tags ON apps USING gin(tags);
 CREATE INDEX IF NOT EXISTS idx_messages_chat_id ON messages(chat_id);
